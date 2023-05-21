@@ -18,6 +18,7 @@ void printError(const char *msg) {
 }
 
 #define NUMBER_OF_PICTURES 5
+#define EXIT_MESSAGE "exit"
 
 const char vahter_sem_name[] = "/vahter_sem";
 const char picture_sem_name_template[] = "/picture_sem";
