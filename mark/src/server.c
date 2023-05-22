@@ -100,9 +100,17 @@ int main() {
     (void)signal(SIGINT, handleSigInt);
 
     struct sockaddr_in address;
-    int addrlen = sizeof(address);
+    int addrlen = sizeof(address), port;
     char buffer[1024] = {0};
     initialize(&clients_queue);
+    
+    // Get port from the command line arguments
+    if (argc == 2) {
+        port = atoi(argv[1]);
+    } else {
+        printf("Usage: ./server <port>\n");
+        return -1;
+    }
 
     initSems();
 
