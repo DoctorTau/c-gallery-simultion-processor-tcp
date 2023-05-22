@@ -96,7 +96,7 @@ void *warderProcess(void *arg) {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     (void)signal(SIGINT, handleSigInt);
 
     struct sockaddr_in address;
@@ -122,7 +122,7 @@ int main() {
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    address.sin_port = htons(port);
 
     // Bind the socket to the specified IP address and port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
