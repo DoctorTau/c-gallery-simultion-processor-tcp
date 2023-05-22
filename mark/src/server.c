@@ -44,16 +44,16 @@ void *processClient(void *arg) {
     int valread;
 
     SendMessage(*client_socket, WELCOME_MESSAGE);
-    sleep(1);
 
     for (;;) {
         // Receive the message number from the client
         ReceiveMessage(*client_socket, buffer);
 
         // Check if the client wants to exit
-        if (buffer == EXIT_MESSAGE) {
+        if (strcmp(buffer, "exit") == 0) {
+            printf("Client %d disconnected\n", *client_socket);
             close(*client_socket);
-            exit(EXIT_SUCCESS);
+            return NULL;
         }
 
         int picture_number = atoi(buffer);
@@ -70,10 +70,16 @@ void *processClient(void *arg) {
         // Wait till the picture is available
         sem_wait(picture_sems_pointers[picture_number]);
 
+       
+
         // Send the picture to the client
         // It should ber the string "Here is picture <picture_number>"
         sprintf(buffer, "Here is picture %d", picture_number);
         SendMessage(*client_socket, buffer);
+
+        // Open sems after leaving the picture
+        ReceiveMessage(*client_socket, buffer);
+        sem_post(picture_sems_pointers[picture_number]);
     }
 }
 
@@ -118,7 +124,7 @@ int main() {
     }
 
     // Listen for incoming connections
-    if (listen(server_fd, 200) < 0) {
+    if (listen(server_fd, 1) < 0) {
         perror("Listening failed");
         closeConnection();
         exit(EXIT_FAILURE);

@@ -47,12 +47,14 @@ void closeAllSems() {
 }
 
 void initSems(){
+    generatePictureSemNames();
+
+    closeAllSems(); 
+
     gallery_sem_pointer = sem_open(vahter_sem_name, O_CREAT, 0666, 50);
     if (gallery_sem_pointer == SEM_FAILED) {
         printError("Could not create gallery semaphore.");
     }
-
-    generatePictureSemNames();
 
     for (int i = 0; i < NUMBER_OF_PICTURES; i++) {
         picture_sems_pointers[i] = sem_open(picture_sem_names[i], O_CREAT, 0666, 10);

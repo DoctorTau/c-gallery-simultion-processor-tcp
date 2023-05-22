@@ -22,7 +22,7 @@ int isEmpty(queue *q) {
 
 void enqueue(queue *q, int element) {
     if (isFull(q)) {
-        printf("Queue is full. Cannot enqueue.\n");
+        // printf("Queue is full. Cannot enqueue.\n");
     } else {
         if (q->front == -1) {
             q->front = 0;
@@ -35,7 +35,7 @@ void enqueue(queue *q, int element) {
 int dequeue(queue *q) {
     int element;
     if (isEmpty(q)) {
-        printf("Queue is empty. Cannot dequeue.\n");
+        // printf("Queue is empty. Cannot dequeue.\n");
         return -1;
     } else if (q->front == q->rear) {
         element = q->items[q->front];
@@ -51,9 +51,9 @@ int dequeue(queue *q) {
 void display(queue *q) {
     int i;
     if (isEmpty(q)) {
-        printf("Queue is empty. Cannot display.\n");
+        // printf("Queue is empty. Cannot display.\n");
     } else {
-        printf("Queue elements are: ");
+        // printf("Queue elements are: ");
         for (i = q->front; i <= q->rear; i++) {
             printf("%d ", q->items[i]);
         }

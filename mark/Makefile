@@ -1,27 +1,26 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -std=c11 -O2 -g -fsanitize=address -fno-omit-frame-pointer
-LDFLAGS = -lm -lrt -fsanitize=address -static-libasan
-BUILD_DIR = build
+CFLAGS = -Wall -Wextra
+LDFLAGS = -lrt -lpthread
+
 SRC_DIR = src
+BUILD_DIR = build
 
-SERVER_SRCS = $(SRC_DIR)/server.c $(SRC_DIR)/queue.c
-CLIENT_SRCS = $(SRC_DIR)/client.c
-SERVER_OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SERVER_SRCS))
-CLIENT_OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(CLIENT_SRCS))
+SERVER_SRC = $(wildcard $(SRC_DIR)/server*.c $(SRC_DIR)/queue*.c)
+CLIENT_SRC = $(wildcard $(SRC_DIR)/client*.c)
 
-.PHONY: all clean
+SERVER_OBJ = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SERVER_SRC))
+CLIENT_OBJ = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(CLIENT_SRC))
 
 all: server client
 
-server: $(SERVER_OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $(BUILD_DIR)/$@
+server: $(SERVER_OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-client: $(CLIENT_OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $(BUILD_DIR)/$@
+client: $(CLIENT_OBJ)
+	$(CC) $(CFLAGS) -o $@ $^
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)/* server client

@@ -70,8 +70,6 @@ int main(int argc, char const *argv[]) {
         sprintf(buffer, "%d", picture_number);
         SendMessage(sock, buffer);
 
-        sleep(1);
-
         // Wait for the picture
         ReceiveMessage(sock, buffer);
 
@@ -82,6 +80,8 @@ int main(int argc, char const *argv[]) {
 
         // Mark the picture as visiteD
         visited_pictures[picture_number] = true;
+
+        SendMessage(sock, "Leave");
 
         // If all pictures have been visited, leave the gallery
         if (isAllTrue(visited_pictures)) {
