@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
 #include "common.h"
 #include "tcpIO.h"
 
@@ -13,20 +14,19 @@
 
 char buffer[MAX_RESPONSE_SIZE] = {0};
 
-int getRandomNumber(int min, int max) {
-    return rand() % (max + 1 - min) + min;
-}
+bool requesting = true;
 
-bool isAllTrue(bool array[]) {
-    for (int i = 0; i < NUMBER_OF_PICTURES; i++) {
-        if (!array[i]) {
-            return false;
-        }
+// Handle SIGINT signal
+void handleSigInt(int sig) {
+    if (sig != SIGINT) {
+        return;
     }
-    return true;
+    requesting = false;
 }
 
 int main(int argc, char const *argv[]) {
+    (void)signal(SIGINT, handleSigInt);
+
     int sock = 0, valread, port;
     struct sockaddr_in serv_addr;
     char *ip_address;
@@ -62,42 +62,30 @@ int main(int argc, char const *argv[]) {
         return -1;
     }
 
-    bool visited_pictures[NUMBER_OF_PICTURES];
-    int time_to_stay = getRandomNumber(1, 5);
+    sleep(1);
+
+    SendMessage(sock, LOGGER_MESSAGE);
 
     // Read the message from the server to enter the gallery
     ReceiveMessage(sock, buffer);
 
-    if(buffer == "Welcome, to the gallery!") {
+    if (buffer == WELCOME_MESSAGE) {
         printf("Entering the gallery.\n");
     }
 
-    for (;;) {
-        int picture_number = getRandomNumber(0, NUMBER_OF_PICTURES - 1);
-        // Request the picture
-        // convert picture_number to string
-        // Clear the buffer
-        memset(buffer, 0, MAX_RESPONSE_SIZE);
-        sprintf(buffer, "%d", picture_number);
-        SendMessage(sock, buffer);
+    while (requesting) {
+        // Send message with log request
+        SendMessage(sock, "Log request");
 
-        // Wait for the picture
+        // Read the message from the server
         ReceiveMessage(sock, buffer);
 
-        printf("Looking at the picture: %s\n", buffer);
+        // Clear console
+        printf("\033[2J\033[1;1H");
 
-        // Look at the picture
-        sleep(time_to_stay);
+        printf("[LOG]\n%s\n", buffer);
 
-        // Mark the picture as visiteD
-        visited_pictures[picture_number] = true;
-
-        SendMessage(sock, "Leave");
-
-        // If all pictures have been visited, leave the gallery
-        if (isAllTrue(visited_pictures)) {
-            break;
-        }
+        sleep(5);
     }
 
     // Send the message to leave the gallery

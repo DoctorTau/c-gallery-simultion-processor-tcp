@@ -1,27 +1,27 @@
 #include "queue.h"
 #include <stdio.h>
 
-void initialize(queue *q) {
+void queue_initialize(queue *q) {
     q->front = -1;
     q->rear = -1;
 }
 
-int isFull(queue *q) {
+int queue_isFull(queue *q) {
     if (q->rear == MAX_SIZE - 1) {
         return 1;
     }
     return 0;
 }
 
-int isEmpty(queue *q) {
+int queue_isEmpty(queue *q) {
     if (q->front == -1 && q->rear == -1) {
         return 1;
     }
     return 0;
 }
 
-void enqueue(queue *q, int element) {
-    if (isFull(q)) {
+void queue_enqueue(queue *q, int element) {
+    if (queue_isFull(q)) {
         // printf("Queue is full. Cannot enqueue.\n");
     } else {
         if (q->front == -1) {
@@ -32,9 +32,9 @@ void enqueue(queue *q, int element) {
     }
 }
 
-int dequeue(queue *q) {
+int queue_dequeue(queue *q) {
     int element;
-    if (isEmpty(q)) {
+    if (queue_isEmpty(q)) {
         // printf("Queue is empty. Cannot dequeue.\n");
         return -1;
     } else if (q->front == q->rear) {
@@ -48,9 +48,9 @@ int dequeue(queue *q) {
     return element;
 }
 
-void display(queue *q) {
+void queue_display(queue *q) {
     int i;
-    if (isEmpty(q)) {
+    if (queue_isEmpty(q)) {
         // printf("Queue is empty. Cannot display.\n");
     } else {
         // printf("Queue elements are: ");

@@ -11,7 +11,6 @@
 #include <semaphore.h>
 #include <sys/wait.h>
 
-
 void printError(const char *msg) {
     perror(msg);
     exit(EXIT_FAILURE);
@@ -20,6 +19,9 @@ void printError(const char *msg) {
 #define NUMBER_OF_PICTURES 5
 #define EXIT_MESSAGE "exit"
 #define WELCOME_MESSAGE "Welcome to the gallery!\n"
+
+#define VISITOR_MESSAGE "Visitor"
+#define LOGGER_MESSAGE "Logger"
 
 const char vahter_sem_name[] = "/vahter_sem";
 const char picture_sem_name_template[] = "/picture_sem";
@@ -46,10 +48,10 @@ void closeAllSems() {
     }
 }
 
-void initSems(){
+void initSems() {
     generatePictureSemNames();
 
-    closeAllSems(); 
+    closeAllSems();
 
     gallery_sem_pointer = sem_open(vahter_sem_name, O_CREAT, 0666, 50);
     if (gallery_sem_pointer == SEM_FAILED) {
