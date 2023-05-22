@@ -7,28 +7,23 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "common.h"
+#include "tcpIO.h"
 
 #define PORT 5678
-#define MAX_RESPONSE_SIZE 1024
 
 char buffer[MAX_RESPONSE_SIZE] = {0};
 
-void SendMessage(int sock, const char *message) {
-    if (send(sock, message, strlen(message), 0) < 0) {
-        perror("Send failed");
-        exit(EXIT_FAILURE);
-    }
-}
-
-void ReceiveMessage(int sock, char *buffer) {
-    if (read(sock, buffer, MAX_RESPONSE_SIZE) < 0) {
-        perror("Read failed");
-        exit(EXIT_FAILURE);
-    }
-}
-
 int getRandomNumber(int min, int max) {
     return rand() % (max + 1 - min) + min;
+}
+
+bool isAllTrue(bool array[]) {
+    for (int i = 0; i < NUMBER_OF_PICTURES; i++) {
+        if (!array[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 int main(int argc, char const *argv[]) {
@@ -59,15 +54,31 @@ int main(int argc, char const *argv[]) {
     bool visited_pictures[NUMBER_OF_PICTURES];
     int time_to_stay = getRandomNumber(1, 5);
 
+    // Read the message from the server to enter the gallery
+    ReceiveMessage(sock, buffer);
+
+    if(buffer == "Welcome, to the gallery!") {
+        printf("Entering the gallery.\n");
+    }
+
     for (;;) {
         int picture_number = getRandomNumber(0, NUMBER_OF_PICTURES - 1);
-        // Wait for the picture to be free
+        // Request the picture
+        // convert picture_number to string
+        // Clear the buffer
+        memset(buffer, 0, MAX_RESPONSE_SIZE);
+        sprintf(buffer, "%d", picture_number);
+        SendMessage(sock, buffer);
+
+        sleep(1);
+
+        // Wait for the picture
+        ReceiveMessage(sock, buffer);
+
+        printf("Looking at the picture: %s\n", buffer);
 
         // Look at the picture
         sleep(time_to_stay);
-        // printGalleryInfo();
-
-        // Leave the picture
 
         // Mark the picture as visiteD
         visited_pictures[picture_number] = true;
@@ -77,13 +88,10 @@ int main(int argc, char const *argv[]) {
             break;
         }
     }
-    printGalleryInfo();
-    // Leave the gallery
-    sem_post(gallery_sem_pointer);
 
-    // Receive response from the server
-    valread = read(sock, buffer, MAX_RESPONSE_SIZE);
-    printf("%s\n", buffer);
+    // Send the message to leave the gallery
+    SendMessage(sock, EXIT_MESSAGE);
+    printf("Exiting gallery.\n");
 
     return 0;
 }

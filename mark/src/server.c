@@ -12,12 +12,21 @@
 
 #include "common.h"
 #include "queue.h"
+#include "tcpIO.h"
 
 #define PORT 5678
 
 int server_fd;
 queue clients_queue;
 pthread_t warder_process;
+
+void closeConnection() {
+    close(server_fd);
+    while (!isEmpty(&clients_queue)) {
+        int client_socket = dequeue(&clients_queue);
+        close(client_socket);
+    }
+}
 
 void handleSigInt(int sig) {
     if (sig != SIGINT) {
@@ -29,31 +38,21 @@ void handleSigInt(int sig) {
     exit(EXIT_SUCCESS);
 }
 
-void closeConnection() {
-    close(server_fd);
-    while (!isEmpty(&clients_queue)) {
-        int client_socket = dequeue(&clients_queue);
-        close(client_socket);
-    }
-}
-
 void *processClient(void *arg) {
-    int client_socket = *(int *)arg;
+    int *client_socket = (int *)arg;
     char buffer[1024] = {0};
     int valread;
 
+    SendMessage(*client_socket, WELCOME_MESSAGE);
+    sleep(1);
+
     for (;;) {
         // Receive the message number from the client
-        valread = read(client_socket, buffer, 1024);
-        if (valread < 0) {
-            perror("Reading failed");
-            close(client_socket);
-            exit(EXIT_FAILURE);
-        }
+        ReceiveMessage(*client_socket, buffer);
 
         // Check if the client wants to exit
         if (buffer == EXIT_MESSAGE) {
-            close(client_socket);
+            close(*client_socket);
             exit(EXIT_SUCCESS);
         }
 
@@ -62,8 +61,9 @@ void *processClient(void *arg) {
         // Check if the picture number is valid
         if (picture_number < 0 || picture_number >= NUMBER_OF_PICTURES) {
             strcpy(buffer, "Invalid picture number.");
-            send(client_socket, buffer, strlen(buffer), 0);
-            close(client_socket);
+            send(*client_socket, buffer, strlen(buffer), 0);
+            close(*client_socket);
+            free(client_socket);
             return NULL;
         }
 
@@ -73,7 +73,7 @@ void *processClient(void *arg) {
         // Send the picture to the client
         // It should ber the string "Here is picture <picture_number>"
         sprintf(buffer, "Here is picture %d", picture_number);
-        send(client_socket, buffer, strlen(buffer), 0);
+        SendMessage(*client_socket, buffer);
     }
 }
 
@@ -82,9 +82,10 @@ void *warderProcess(void *arg) {
         // Check if there are any clients waiting and there are available slots in gallery
         if (!isEmpty(&clients_queue)) {
             sem_wait(gallery_sem_pointer);
-            int client_socket = dequeue(&clients_queue);
+            int *client_socket = malloc(sizeof(int));
+            *client_socket = dequeue(&clients_queue);
             pthread_t client_thread;
-            pthread_create(&client_thread, NULL, processClient, &client_socket);
+            pthread_create(&client_thread, NULL, processClient, (void *)client_socket);
         }
     }
 }
@@ -135,6 +136,8 @@ int main() {
             closeConnection();
             exit(EXIT_FAILURE);
         }
+
+        printf("New client connected to socket: %d\n", new_socket);
 
         // Add the new client to the queue
         enqueue(&clients_queue, new_socket);
